@@ -1,16 +1,12 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
-import nodemailer from "nodemailer";
 import {
   getVerifyEmailTemplate,
   getResetPasswordTemplate
 } from "./emailTemplate.js";
 
 dotenv.config();
-
-console.log("BREVO_USER:", process.env.BREVO_USER);
-console.log("BREVO_PASS:", process.env.BREVO_PASS);
 
 const app = express();
 app.use(cors());
@@ -22,49 +18,44 @@ app.get("/", (req, res) => {
 
 const otpStore = {};
 
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
-  auth: {
-    user: decodeURIComponent(process.env.BREVO_USER),
-    pass: process.env.BREVO_PASS,
-  },
-});
-
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 async function sendOTPEmail(email, otp, type) {
-  let html;
+  const html = type === "signup"
+    ? getVerifyEmailTemplate(otp)
+    : getResetPasswordTemplate(otp);
 
-  if (type === "signup") {
-    html = getVerifyEmailTemplate(otp);
-  } else if (type === "reset") {
-    html = getResetPasswordTemplate(otp);
-  }
+  const subject = type === "signup" ? "Verify your email" : "Reset your password";
 
-  const info = await transporter.sendMail({
-    from: "GETXH <agency@getxh.in>",
-    to: email,
-    subject: type === "signup"
-      ? "Verify your email"
-      : "Reset your password",
-    html
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": process.env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: { name: "GETXH", email: "agency@getxh.in" },
+      to: [{ email }],
+      subject,
+      htmlContent: html,
+    }),
   });
 
-  console.log("MAIL SENT:", info);
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Brevo API error ${res.status}: ${err}`);
+  }
+
+  console.log("MAIL SENT via Brevo API to", email);
 }
 
 async function handleSendOtp(req, res) {
   const { email, type } = req.body;
 
   if (!email) {
-    return res.status(400).json({ success: false, message: 'Email is required' });
+    return res.status(400).json({ success: false, message: "Email is required" });
   }
 
   try {
@@ -77,22 +68,21 @@ async function handleSendOtp(req, res) {
 
   } catch (error) {
     console.error("🔥 FULL ERROR:", error);
-
     return res.status(500).json({
       success: false,
       message: "Failed to send OTP",
-      error: error.message
+      error: error.message,
     });
   }
 }
 
-app.post('/send-otp', handleSendOtp);
+app.post("/send-otp", handleSendOtp);
 
-app.post('/verify-otp', async (req, res) => {
+app.post("/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
 
   if (!email || !otp) {
-    return res.status(400).json({ success: false, message: 'Email and OTP are required' });
+    return res.status(400).json({ success: false, message: "Email and OTP are required" });
   }
 
   const stored = otpStore[email];
