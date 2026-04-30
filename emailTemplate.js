@@ -59,7 +59,7 @@ export function getVerifyEmailTemplate(otp) {
           <tr>
             <td align="center" style="padding:16px 32px 24px;">
               <p style="margin:0;font-size:11.5px;color:#94a3b8;">&copy; 2026 GETXH. All rights reserved.</p>
-              <p style="margin:4px 0 0 0;font-size:11.5px;color:#94a3b8;">Need help? <a href="mailto:support@getxh.in" style="color:#2196f3;text-decoration:none;">support@getxh.in</a></p>
+              <p style="margin:4px 0 0 0;font-size:11.5px;color:#94a3b8;">Need help? support@getxh.in</p>
             </td>
           </tr>
 
@@ -133,7 +133,7 @@ export function getResetPasswordTemplate(otp) {
           <tr>
             <td align="center" style="padding:16px 32px 24px;">
               <p style="margin:0;font-size:11.5px;color:#94a3b8;">&copy; 2026 GETXH. All rights reserved.</p>
-              <p style="margin:4px 0 0 0;font-size:11.5px;color:#94a3b8;">Need help? <a href="mailto:support@getxh.in" style="color:#2196f3;text-decoration:none;">support@getxh.in</a></p>
+              <p style="margin:4px 0 0 0;font-size:11.5px;color:#94a3b8;">Need help? support@getxh.in</p>
             </td>
           </tr>
 
