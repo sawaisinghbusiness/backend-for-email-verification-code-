@@ -1,12 +1,30 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
+import mongoose from "mongoose";
 import {
   getVerifyEmailTemplate,
   getResetPasswordTemplate
 } from "./emailTemplate.js";
 
 dotenv.config();
+
+// ── MongoDB connect ──────────────────────────────────
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log("MongoDB connected"))
+    .catch(e => console.error("MongoDB error:", e.message));
+}
+
+const userSchema = new mongoose.Schema({
+  uid:       { type: String, index: true },
+  username:  String,
+  email:     { type: String, index: true },
+  mobile:    String,
+  createdAt: { type: Date, default: Date.now }
+});
+
+const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 const app = express();
 app.use(cors());
@@ -77,6 +95,22 @@ async function handleSendOtp(req, res) {
 }
 
 app.post("/send-otp", handleSendOtp);
+
+app.post("/save-user", async (req, res) => {
+  const { uid, email, username, mobile } = req.body;
+  if (!email) return res.status(400).json({ success: false, message: "Email required" });
+  try {
+    await User.findOneAndUpdate(
+      { email },
+      { uid, email, username, mobile },
+      { upsert: true, new: true }
+    );
+    return res.status(200).json({ success: true });
+  } catch (e) {
+    console.error("save-user error:", e.message);
+    return res.status(500).json({ success: false, message: e.message });
+  }
+});
 
 app.post("/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
