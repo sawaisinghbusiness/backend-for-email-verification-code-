@@ -31,7 +31,34 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Backend is running 🚀");
+  res.send(`
+    <html>
+      <head>
+        <title>GETXH</title>
+        <style>
+          body{
+            margin:0;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+            background:#0f172a;
+            color:white;
+            font-family:Arial,sans-serif;
+            text-align:center;
+          }
+          h1{font-size:42px;margin-bottom:10px;}
+          p{font-size:18px;color:#cbd5e1;}
+        </style>
+      </head>
+      <body>
+        <div>
+          <h1>🚧 Website Under Maintenance</h1>
+          <p>We're improving GETXH.<br>Please check back soon.</p>
+        </div>
+      </body>
+    </html>
+  `);
 });
 
 const otpStore = {};
