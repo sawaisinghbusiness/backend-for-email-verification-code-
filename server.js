@@ -133,11 +133,4 @@ app.post("/verify-otp", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on port ${PORT}`);
-  // Self-ping every 4 minutes to prevent sleep
-  const SELF_URL = process.env.RAILWAY_PUBLIC_DOMAIN
-    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/`
-    : `http://localhost:${PORT}/`;
-  setInterval(() => {
-    fetch(SELF_URL).catch(() => {});
-  }, 4 * 60 * 1000);
-});
+ 
