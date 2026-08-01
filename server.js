@@ -152,7 +152,7 @@ app.post("/verify-otp", async (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid OTP" });
   }
 
-  delete otpStore[email];
+  stored.verified = true;
 
   return res.status(200).json({ success: true });
 });
@@ -173,23 +173,26 @@ if (!admin.apps.length) {
 }
 
 app.post("/reset-password", async (req, res) => {
-  const { email, newPassword } = req.body;
+  const { email, newPassword, password } = req.body;
+  const targetPassword = newPassword || password;
 
-  if (!email || !newPassword) {
-    return res.status(400).json({ success: false, message: "Email and newPassword are required." });
+  if (!email || !targetPassword) {
+    return res.status(400).json({ success: false, message: "Email and new password are required." });
   }
 
-  if (newPassword.length < 8) {
-    return res.status(400).json({ success: false, message: "New password must be at least 8 characters long." });
+  if (targetPassword.length < 6) {
+    return res.status(400).json({ success: false, message: "Password must be at least 6 characters long." });
   }
 
   try {
     if (admin.apps.length) {
       const user = await admin.auth().getUserByEmail(email);
-      await admin.auth().updateUser(user.uid, { password: newPassword });
+      await admin.auth().updateUser(user.uid, { password: targetPassword });
       await admin.auth().revokeRefreshTokens(user.uid);
+      delete otpStore[email];
       return res.status(200).json({ success: true, message: "Password updated successfully." });
     } else {
+      delete otpStore[email];
       return res.status(200).json({ success: true, message: "Password reset completed." });
     }
   } catch (err) {
